@@ -55,21 +55,6 @@ TArray<FTransform> FMappedAnimation::GetTransforms(FName BoneTrackName)
 	return {};
 }
 
-void UAnimationRoutine::LoadAndMapAnimation(const FString& AnimFilePath)
-{
-	FMappedAnimation AnimMap(AnimFilePath);
-	FName Bone("foot_l");
-	TArray<FTransform> Track = AnimMap.GetTransforms(Bone);
-	int Index = 0;
-
-	for(FTransform Transform : Track)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Key: %d\n%s"), Index, *Transform.ToString());
-		Index++;
-	}
-
-}
-
 void UAnimationRoutine::MapAnimation(const UAnimSequence* Anim)
 {
 	FMappedAnimation AnimMap(Anim);
@@ -85,14 +70,13 @@ void UAnimationRoutine::MapAnimation(const UAnimSequence* Anim)
 
 }
 
-UAnimSequence* UAnimSequence::LoadAnimationSequence(const FString& FilePath)
+void UAnimationRoutine::LoadAnimationSequence(const FString& FilePath)
 {
 	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *FilePath)};
 	if(Anim)
 	{
-		return Anim;
+		SourceAnimation = Anim;
 	}
-	return nullptr;
 }
 
 void UAnimationRoutine::AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
@@ -106,11 +90,22 @@ void UAnimationRoutine::AddKey(const FString& AnimFilePath, float Time, const FN
 }
 
 
-void UAnimationRecorder::StartRecording(UObject* Subject)
-{}
+void UAnimationRecorder::StartRecording(AActor* Subject)
+{
+	// figure out if subject has skeleton
+	if(Subject)
+	{
+	}
 
-void UAnimationRecorder::StopRecording()
-{}
+}
+
+// we return a mapped animation as this is a more mallable
+// and functional friendly version of an animation
+// the mapped animation needs a way to turn itself into a sequence
+FMappedAnimation UAnimationRecorder::StopRecording()
+{
+	return FMappedAnimation();
+}
 
 /*
  * instead i can just make a base sequence that I add keys to
