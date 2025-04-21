@@ -1,0 +1,58 @@
+[
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineTool.Build.cs",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineTool.cpp",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineTool.h",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineToolCharacter.cpp",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineToolCharacter.h",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineToolGameMode.cpp",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	},
+	{
+		"file": "/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/Source/AnimationRoutineTool/AnimationRoutineToolGameMode.h",
+		"arguments": [
+			"/home/ash/Workspace/dev/UnrealEngine/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v23_clang-18.1.0-rockylinux8/x86_64-unknown-linux-gnu/bin/clang++",
+			"@/home/ash/Workspace/dev/UnrealProjs/AnimationRoutineTool/.vscode/compileCommands_AnimationRoutineTool/AnimationRoutineTool.1.rsp"
+		],
+		"directory": "/home/ash/Workspace/dev/UnrealEngine/Engine/Source"
+	}
+]
