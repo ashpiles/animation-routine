@@ -72,3 +72,11 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Generated Files
+.cache/*
+.vscode/*
+compile_command.json
+
+# Git
+.git/*
