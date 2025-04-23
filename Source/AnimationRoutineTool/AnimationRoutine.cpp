@@ -5,81 +5,38 @@
 #include "Animation/AnimData/AnimDataModel.h"
 #include "AssetViewUtils.h"
 
-FMappedAnimation::FMappedAnimation()
-{}
 
-FMappedAnimation::FMappedAnimation(const UAnimSequence* Anim)
+void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, TFunction<void (FTransform&)> Task)
 {
-	if(Anim)
+	FAnimTask AnimTask(Anim, Task);
+
+	TArray<FName> BoneTrackNames {};
+	TArray<FTransform> OutTransforms {};
+	Anim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
+	// Test First Apply
+	AnimTask.ApplyTaskTo(BoneTrackNames[0], OutTransforms);
+
+	for(FTransform& Transform : OutTransforms)
 	{
-		const IAnimationDataModel* ModelInterface = Anim->GetDataModel();
-		TArray<FName> OutNames {};
-		TArray<FTransform> OutTransforms{};
-		ModelInterface->GetBoneTrackNames(OutNames);
-
-		for (FName Name : OutNames)
-		{
-			FAnimationCurveIdentifier CurveIdentifier =
-				FAnimationCurveIdentifier(Name, ERawCurveTrackTypes::RCT_Transform);
-			ModelInterface->GetBoneTrackTransforms(Name, OutTransforms);
-			BoneTrackNames.Add(Name);
-			Transforms.Add(OutTransforms);
-			
-			UE_LOG(LogTemp, Display, TEXT("%s - %d"), *Name.ToString(), ModelInterface->GetNumberOfKeys());
-		}
+		UE_LOG(LogTemp, Display, TEXT("%s Transform:\n%s"), *BoneTrackNames[0].ToString(), *Transform.ToString());
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot map Animation Sequence was given null pointer"));
-	}
-}
-
-// needs to be redone in respect to a better format of the datastructure
-void FMappedAnimation::SetPoseAt(const TArray<FTransform>* const Pose)
-{
-	Transforms.Add(*Pose);
-}
-
-
-TArray<FTransform> FMappedAnimation::GetTransforms(FName BoneTrackName)
-{
-	int32 Index;
-	if(BoneTrackNames.Find(BoneTrackName, Index))
-	{
-		
-		UE_LOG(LogTemp, Warning, TEXT("BoneTrack found at: %d"), Index);
-		return Transforms[Index];
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("BoneTrack not found: %s"), *BoneTrackName.ToString());
-	return {};
-}
-
-void UAnimationRoutine::MapAnimation(const UAnimSequence* Anim)
-{
-	FMappedAnimation AnimMap(Anim);
-	FName Bone("foot_l");
-	TArray<FTransform> Track = AnimMap.GetTransforms(Bone);
-	int Index = 0;
-
-	for(FTransform Transform : Track)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Key: %d\n%s"), Index, *Transform.ToString());
-		Index++;
-	}
+	// Test Second Apply
+	// Test Third Apply
+	// Test Fourth Apply
+	
 
 }
 
-void UAnimationRoutine::LoadAnimationSequence(const FString& FilePath)
+void UAnimRoutine::LoadAnimSequence(const FString& FilePath)
 {
 	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *FilePath)};
 	if(Anim)
 	{
-		SourceAnimation = Anim;
+		SourceAnim = Anim;
 	}
 }
 
-void UAnimationRoutine::AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
+void UAnimRoutine::AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
 {
 	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *AnimFilePath)};
 	if(Anim)
@@ -90,7 +47,49 @@ void UAnimationRoutine::AddKey(const FString& AnimFilePath, float Time, const FN
 }
 
 
-void UAnimationRecorder::StartRecording(AActor* Subject)
+void FAnimTask::ApplyTaskTo(FName BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms)
+{
+	SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack,KeyFrames, OutTransforms);
+	for(FTransform Transform : OutTransforms)
+	{
+		AnimTask(Transform);
+	}
+}
+
+void FAnimTask::ApplyTaskTo(FName BoneTrack, TArray<FTransform>& OutTransforms)
+{
+	SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
+	for(FTransform Transform : OutTransforms)
+	{
+		AnimTask(Transform);
+	}
+}
+
+void FAnimTask::ApplyTaskTo(TArray<FName> BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms)
+{
+	for(FName BoneTrack : BoneTracks)
+	{
+		SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, KeyFrames, OutTransforms);
+		for(FTransform Transform : OutTransforms)
+		{
+			AnimTask(Transform);
+		}
+	}
+}
+void FAnimTask::ApplyTaskTo(TArray<FName> BoneTracks, TArray<FTransform>& OutTransforms)
+{
+	for(FName BoneTrack : BoneTracks)
+	{
+		SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
+		for(FTransform Transform : OutTransforms)
+		{
+			AnimTask(Transform);
+		}
+	}
+}
+
+
+void UAnimRecorder::StartRecording(AActor* Subject)
 {
 	// figure out if subject has skeleton
 	if(Subject)
@@ -102,14 +101,13 @@ void UAnimationRecorder::StartRecording(AActor* Subject)
 // we return a mapped animation as this is a more mallable
 // and functional friendly version of an animation
 // the mapped animation needs a way to turn itself into a sequence
-FMappedAnimation UAnimationRecorder::StopRecording()
+void UAnimRecorder::StopRecording()
 {
-	return FMappedAnimation();
 }
 
 /*
  * instead i can just make a base sequence that I add keys to
  * making an object with a skeleton recordable via a ActorComponent seems like the best path
  * that way the character can update the widget on events and the recording can be fine tuned
- * the Function is UAnimSequence::CreateAnimation(Mesh/SkeletonMesh/UAnimSequence*)
+ * the Function is UAnimSequence::CreateAnim(Mesh/SkeletonMesh/UAnimSequence*)
 */
