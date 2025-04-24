@@ -6,15 +6,15 @@
 #include "AssetViewUtils.h"
 
 
-void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, TFunction<void (FTransform&)> Task)
+void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, const FAnimTask& Task)
 {
-	FAnimTask AnimTask(Anim, Task);
+	FAnimTask AnimTask(Task);
 
 	TArray<FName> BoneTrackNames {};
 	TArray<FTransform> OutTransforms {};
 	Anim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
 	// Test First Apply
-	AnimTask.ApplyTaskTo(BoneTrackNames[0], OutTransforms);
+	Task.ApplyTaskTo(Anim, BoneTrackNames[0], OutTransforms);
 
 	for(FTransform& Transform : OutTransforms)
 	{
@@ -47,40 +47,29 @@ void UAnimRoutine::AddKey(const FString& AnimFilePath, float Time, const FName& 
 }
 
 
-void FAnimTask::ApplyTaskTo(FName BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms)
-{
-	SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack,KeyFrames, OutTransforms);
+void FAnimTask::ApplyTaskTo(const UAnimSequence* Anim, const FName& BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const
+{ 
+	Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack,KeyFrames, OutTransforms);
 	for(FTransform Transform : OutTransforms)
 	{
 		AnimTask(Transform);
 	}
 }
 
-void FAnimTask::ApplyTaskTo(FName BoneTrack, TArray<FTransform>& OutTransforms)
+void FAnimTask::ApplyTaskTo(const UAnimSequence* Anim, const FName& BoneTrack, TArray<FTransform>& OutTransforms) const
 {
-	SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
+	Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
 	for(FTransform Transform : OutTransforms)
 	{
 		AnimTask(Transform);
 	}
 }
 
-void FAnimTask::ApplyTaskTo(TArray<FName> BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms)
+void FAnimTask::ApplyTaskTo(const UAnimSequence* Anim, const TArray<FName>& BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const
 {
 	for(FName BoneTrack : BoneTracks)
 	{
-		SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, KeyFrames, OutTransforms);
-		for(FTransform Transform : OutTransforms)
-		{
-			AnimTask(Transform);
-		}
-	}
-}
-void FAnimTask::ApplyTaskTo(TArray<FName> BoneTracks, TArray<FTransform>& OutTransforms)
-{
-	for(FName BoneTrack : BoneTracks)
-	{
-		SourceAnim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
+		Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, KeyFrames, OutTransforms);
 		for(FTransform Transform : OutTransforms)
 		{
 			AnimTask(Transform);
@@ -88,11 +77,23 @@ void FAnimTask::ApplyTaskTo(TArray<FName> BoneTracks, TArray<FTransform>& OutTra
 	}
 }
 
+void FAnimTask::ApplyTaskTo(const UAnimSequence* Anim, const TArray<FName>& BoneTracks, TArray<FTransform>& OutTransforms) const
+{
+	for(FName BoneTrack : BoneTracks)
+	{
+		Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
+		for(FTransform Transform : OutTransforms)
+		{
+			AnimTask(Transform);
+		}
+	}
+}
 
-void UAnimRecorder::StartRecording(AActor* Subject)
+
+void UAnimRecorder::StartRecording(AActor* NewSubject)
 {
 	// figure out if subject has skeleton
-	if(Subject)
+	if(NewSubject)
 	{
 	}
 

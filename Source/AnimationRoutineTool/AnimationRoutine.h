@@ -3,24 +3,24 @@
 
 class UAnimSequence;
 
-USTRUCT(noexport, BlueprintType)
+USTRUCT(BlueprintType)
 struct FAnimTask
 {
+    GENERATED_BODY()
 private:
-    const UAnimSequence* SourceAnim;
     TFunction<void (FTransform&)> AnimTask;
 
 public:
-    FAnimTask(const UAnimSequence* Anim, TFunction<void (FTransform&)> Task) :
-	SourceAnim(Anim), AnimTask(Task){};
+    FAnimTask() = default;
+    FAnimTask(const TFunction<void (FTransform&)>& Task) : AnimTask(Task){};
 
     // it could be helpful to abstract the params into its own object
     // that way relations and constraints on the bones can be unified and applied in an object
-    void ApplyTaskTo(FName BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms);
-    void ApplyTaskTo(FName BoneTrack, TArray<FTransform>& OutTransforms);
+    void ApplyTaskTo(const UAnimSequence* Anim, const FName& BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const;
+    void ApplyTaskTo(const UAnimSequence* Anim, const FName& BoneTrack, TArray<FTransform>& OutTransforms) const;
     // with multiple bone tracks the arrays will be indexed accordingly
-    void ApplyTaskTo(TArray<FName> BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms);
-    void ApplyTaskTo(TArray<FName> BoneTracks, TArray<FTransform>& OutTransforms);
+    void ApplyTaskTo(const UAnimSequence* Anim, const TArray<FName>& BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const;
+    void ApplyTaskTo(const UAnimSequence* Anim, const TArray<FName>& BoneTracks, TArray<FTransform>& OutTransforms) const;
 };
 
 
@@ -30,13 +30,14 @@ class UAnimRecorder : public UObject
     GENERATED_BODY()
 
 private:
+    UPROPERTY(EditAnywhere)
     USkeletalMesh* Subject;
-    UAnimSequence RecordedAnim;
+    UPROPERTY(EditAnywhere)
+    UAnimSequence* RecordedAnim;
 
-public:
-
+public: 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    void StartRecording(AActor* Subject);
+    void StartRecording(AActor* NewSubject);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
     void StopRecording();
@@ -57,8 +58,8 @@ public:
 	void LoadAnimSequence(const FString& FilePath);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-	 void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
+    void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-	void MapTaskToAnim(const UAnimSequence* Anim, TFunction<void (FTransform&)> AnimTask);
+	static void MapTaskToAnim(const UAnimSequence* Anim, const FAnimTask& Task);
 };
