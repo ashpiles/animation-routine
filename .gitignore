@@ -76,12 +76,9 @@ DerivedDataCache/*
 # Generated Files
 .cache/*
 .vscode/*
-compile_command.json
-.idea/*
-Source/.idea/*
-
-# Content
-Content/StarterContent/*
+compile_commands.json
 
 # Git
 .git/*
+
+.ignore
