@@ -86,3 +86,4 @@ Content/StarterContent/*
 .git/*
 
 .ignore
+.vsconfig

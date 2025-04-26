@@ -22,8 +22,5 @@ public:
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
     static void MapTaskToAnim(const UAnimSequence* Anim, const UAnimTask* AnimTask);
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    static void CreateTask();
-
+  
 };

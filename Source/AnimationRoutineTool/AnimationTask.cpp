@@ -10,7 +10,7 @@ void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, FName BoneTrack, TArray<F
 	Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack,KeyFrames, OutTransforms);
 	for(FTransform Transform : OutTransforms)
 	{
-		AnimTask(Transform);
+		TaskFunctor.Execute(Transform);
 	}
 }
 
@@ -19,7 +19,7 @@ void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, FName BoneTrack, TArray<F
 	Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
 	for(FTransform Transform : OutTransforms)
 	{
-		AnimTask(Transform);
+		TaskFunctor.Execute(Transform);
 	}
 }
 
@@ -31,7 +31,7 @@ void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, TArray<FName> BoneTracks,
 		Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, KeyFrames, OutTransforms);
 		for(FTransform Transform : OutTransforms)
 		{
-			AnimTask(Transform);
+			TaskFunctor.Execute(Transform);
 		}
 	}
 }
@@ -43,7 +43,7 @@ void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, TArray<FName> BoneTracks,
 		Anim->GetDataModel()->GetBoneTrackTransforms(BoneTrack, OutTransforms);
 		for(FTransform Transform : OutTransforms)
 		{
-			AnimTask(Transform);
+			TaskFunctor.Execute(Transform);
 		}
 	}
 }
