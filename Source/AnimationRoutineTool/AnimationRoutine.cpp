@@ -1,6 +1,6 @@
 #include "AnimationRoutine.h"
 #include "AnimationTask.h"
-#include "BoneRecorder.h"
+#include "AnimationTaskContext.h"
 #include "Animation/AnimCurveTypes.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimData/IAnimationDataModel.h"
@@ -8,13 +8,14 @@
 #include "AssetViewUtils.h"
 
 
-void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, const UAnimTask* Task)
+void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, UAnimTask* Task)
 {
 	TArray<FName> BoneTrackNames {};
 	TArray<FTransform> OutTransforms {};
 	Anim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
 	// Test First Apply
-	Task->ApplyTaskTo(Anim, BoneTrackNames[0], OutTransforms);
+	UAnimSequenceContext AnimContext(Anim);
+	AnimContext.AcceptTask(*Task);
 
 	for(FTransform& Transform : OutTransforms)
 	{
@@ -22,9 +23,7 @@ void UAnimRoutine::MapTaskToAnim(const UAnimSequence* Anim, const UAnimTask* Tas
 	}
 	// Test Second Apply
 	// Test Third Apply
-	// Test Fourth Apply
-	
-
+	// Test Fourth Apply 
 }
 
 void UAnimRoutine::LoadAnimSequence(const FString& FilePath)

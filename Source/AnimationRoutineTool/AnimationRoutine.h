@@ -18,9 +18,9 @@ public:
     void LoadAnimSequence(const FString& FilePath);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-     void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
+    void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    static void MapTaskToAnim(const UAnimSequence* Anim, const UAnimTask* AnimTask);
+    static void MapTaskToAnim(const UAnimSequence* Anim, UAnimTask* AnimTask);
   
 };
