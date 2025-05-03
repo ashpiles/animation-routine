@@ -8,7 +8,7 @@
 #include "AssetViewUtils.h"
 
 
-void UAnimRoutine::MapTaskToAnim(UAnimSequence* const Anim, UAnimTask* Task)
+void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, UAnimTask* Task)
 {
 	if (Task && Anim)
 	{
@@ -19,6 +19,7 @@ void UAnimRoutine::MapTaskToAnim(UAnimSequence* const Anim, UAnimTask* Task)
 		SourceAnim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
 
 		FMappedAnimation MappedAnim(SourceAnim);
+		double AnimLength = SourceAnim->GetDataModel()->GetPlayLength();
 		
 		 
 		for(FName& BoneName : BoneTrackNames)
@@ -34,14 +35,16 @@ void UAnimRoutine::MapTaskToAnim(UAnimSequence* const Anim, UAnimTask* Task)
 					Transform.GetTranslation() += Translation;
 					Transform.GetRotation() += Rotation;
 					Transform.GetScale3D() += Scale;
+					double Time = (AnimLength / Frame.Value);
+					Time = FGenericPlatformMath::IsNaN(Time) || !FGenericPlatformMath::IsFinite(Time) ? 0 : AnimLength - Time;
 
 					// I have tried a million different approaches, but I keep getting an access violation when trying to add a keyframe
 					//     ````````````````````````````````````````````````````````
 					//	   ` Hate. Let me tell you how I have come to hate you... ` 
 					//	   `|/`````````````````````````````````````````````````````
 					//	    v
-					//	 (,⚆_⚆)\
-					//SourceAnim->AddKeyToSequence((Frame.Value/30), BoneName, Transform); // the 30 is the targeted frame rate so by dividing we convert the frame to a time value
+					//	 (,⚆_⚆)\       											/
+					SourceAnim->AddKeyToSequence(Time, BoneName, Transform);
 					UE_LOG(LogTemp, Display, TEXT("%s Transform:\n%s"), *BoneTrackNames[0].ToString(), *Transform.ToString());
 					return true;
 				}); 

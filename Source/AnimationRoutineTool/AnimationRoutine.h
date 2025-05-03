@@ -24,6 +24,6 @@ public:
     void AddKey(UAnimSequence* const Anim, float Time, const FName& BoneName, const FTransform& AdditiveTransform); 
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    void MapTaskToAnim(UAnimSequence* const Anim, UAnimTask* AnimTask);
+    void MapTaskToAnim(UAnimSequence* Anim, UAnimTask* AnimTask);
   
 };
