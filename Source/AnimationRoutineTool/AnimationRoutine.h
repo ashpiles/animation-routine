@@ -10,7 +10,10 @@ class UAnimRoutine : public UBlueprintFunctionLibrary
     GENERATED_BODY()
 
 private:
+    UPROPERTY()
     UAnimSequence* SourceAnim;
+    UPROPERTY()
+    UAnimTask* TaskInstance;
 
 public:
 
@@ -18,9 +21,9 @@ public:
     void LoadAnimSequence(const FString& FilePath);
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
+    void AddKey(UAnimSequence* const Anim, float Time, const FName& BoneName, const FTransform& AdditiveTransform); 
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    static void MapTaskToAnim(const UAnimSequence* Anim, UAnimTask* AnimTask);
+    void MapTaskToAnim(UAnimSequence* const Anim, UAnimTask* AnimTask);
   
 };

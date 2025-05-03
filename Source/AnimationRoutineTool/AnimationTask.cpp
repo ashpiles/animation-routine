@@ -4,6 +4,8 @@
 #include "Animation/AnimData/IAnimationDataModel.h"
 #include "Animation/AnimData/AnimDataModel.h"
 #include "AssetViewUtils.h"
+#include "PoseSlice.h"
+#include "SkeletalMeshAttributes.h"
 #include "UObject/FastReferenceCollector.h"
 
 void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, FName BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const
@@ -50,6 +52,7 @@ void UAnimTask::ApplyTaskTo(const UAnimSequence* Anim, TArray<FName> BoneTracks,
 }
 
 
+
 UAnimTask* UAnimTask::CreateAnimTask(FAnimTaskFunc Func)
 {
 	UAnimTask* NewTask = NewObject<UAnimTask>();
@@ -57,9 +60,15 @@ UAnimTask* UAnimTask::CreateAnimTask(FAnimTaskFunc Func)
 	return NewTask;
 }
 
-void UAnimTask::ApplyAnimationTask(FPoseSlice<UAnimSequence>& Poses)
+void UAnimTask::ApplyAnimationTask(FBoneVector& Poses)
 {
-	// use the kind of context you got to determine which kind of ApplyTaskTo function you use
-	ApplyTaskTo(Poses.AnimSource, Poses.BoneNames, Poses.BoneTransforms);
+
+	for (int x = 0; x < Poses.Length(); x++)
+	{
+		TaskFunc.Execute(Poses[x]);
+	}
 } 
 
+/*
+ * the current method is clunky, float curves are likely more suited for this
+ */

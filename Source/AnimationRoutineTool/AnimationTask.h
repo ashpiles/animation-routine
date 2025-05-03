@@ -1,27 +1,14 @@
+#pragma once
+
 #include "CoreMinimal.h"
 #include "BonePose.h"
 #include "AnimationTask.generated.h"
 
 class UAnimSequence;
+struct FBoneVector;
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FAnimTaskFunc, FTransform&, Transform);
 
-template<typename T>
-struct FPoseSlice
-{
-    FPoseSlice(const T* Source) : AnimSource(Source) {};
-    TArray<FTransform> BoneTransforms;
-    TArray<FName> BoneNames;
-    const T* AnimSource;
-
-    // This would work best as a vector like data structure
-    // there are multiple kinds of needs for a data structure of this kind
-    void Append(FPoseSlice& Slice)
-    {
-        BoneTransforms.Append(Slice.BoneTransforms);
-        BoneNames.Append(Slice.BoneNames); 
-    }
-};
 
 //// just get rid of templates not worth it
 //template<typename T>
@@ -56,20 +43,19 @@ UCLASS(Blueprintable)
 class UAnimTask : public UBlueprintFunctionLibrary 
 {
     GENERATED_BODY()
-private:
     FAnimTaskFunc TaskFunc;
     void ApplyTaskTo(const UAnimSequence* Anim, FName BoneTrack, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransform) const; 
     void ApplyTaskTo(const UAnimSequence* Anim, FName BoneTrack, TArray<FTransform>& OutTransforms) const; 
     void ApplyTaskTo(const UAnimSequence* Anim, TArray<FName> BoneTracks, TArray<FFrameNumber> KeyFrames, TArray<FTransform>& OutTransforms) const; 
     void ApplyTaskTo(const UAnimSequence* Anim, TArray<FName> BoneTracks, TArray<FTransform>& OutTransforms) const;
-
+ 
 
 public: 
     
     UFUNCTION(BlueprintCallable, Category="Animation Routine")
     static UAnimTask* CreateAnimTask(FAnimTaskFunc Func);
 
-    void ApplyAnimationTask(FPoseSlice<UAnimSequence>& Poses); // this can be put on a stack so changes are undone 
+    void ApplyAnimationTask(FBoneVector& Poses); // this can be put on a stack so changes are undone 
 
 };
 
