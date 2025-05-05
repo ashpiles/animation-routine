@@ -81,6 +81,7 @@ Content/LevelPrototyping/*
 # Generated Files
 .cache/*
 .vscode/*
+.vscode/
 compile_commands.json
 .idea/*
 Source/.idea/*
