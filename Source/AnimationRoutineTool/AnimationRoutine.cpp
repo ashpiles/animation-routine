@@ -1,50 +1,49 @@
+#include "AnimationRoutine.h"
 #include "Animation/AnimCurveTypes.h"
 #include "Animation/AnimData/AnimDataModel.h"
 #include "Animation/AnimData/IAnimationDataModel.h"
 #include "Animation/AnimSequence.h"
-#include "AnimationRoutine.h"
 #include "AssetViewUtils.h"
 
-void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName)
+void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName, float Amp, float Freq)
 {
-	if (Anim)
-	{
-		TArray<FName> BoneTrackNames{};
-		Anim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
-		double AnimLength = Anim->GetDataModel()->GetPlayLength();
+	if (!Anim) return; 
 
-		TFunction<double(double, double)> GetFrameTime = [&AnimLength](double frame, double time) {
-			time = (time / frame);
-			return FGenericPlatformMath::IsNaN(time) || !FGenericPlatformMath::IsFinite(time) ? 0 : AnimLength - time;
+	// Wraps our sin function into a TBehavior
+	auto Bounce = [](float Amplitude, float Frequency) -> FRAN::TBehavior<float>
+	{
+		return [Amplitude, Frequency](float t)
+		{
+			return Amplitude * FMath::Sin(t * Frequency);
+		};
+	};
+
+	// Converts a FFrameNumber to the relevant animations time code
+	auto TimeCode = [Anim](FFrameNumber Frame) -> float 
+	{
+		const float TotalLength = Anim->GetPlayLength();
+		const float	TotalFrames = Anim->GetNumberOfSampledKeys();
+		return TotalLength * (Frame.Value / TotalFrames);
+	};
+ 
+
+	TFunction<bool(const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame)> Iterator =
+		[Anim, Bounce, TimeCode, BoneName, Amp, Freq] (const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool
+		{
+			const float t = TimeCode(Frame);
+			auto b = Bounce(Amp, Freq);
+			float result = b(t);
+			FTransform transform = FTransform(UE::Math::TVector<double>(Pos.X, result, Pos.Z));
+			Anim->AddKeyToSequence(t, BoneName, transform);
+			
+			UE_LOG(LogTemp, Display, TEXT("%s Y bounce at time %f: %f"), *BoneName.ToString(), t, result);
+			return true;
 		};
 
-		TFunction<double(double, double)> Bounce = [](double value, double time) {
-			return value * sin(time);
-		};
-
-		TFunction<bool(const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame)> Iterator;
-		Iterator = [&AnimLength, &Bounce, &BoneName, &GetFrameTime](const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool {
-				double PosY = Bounce(Pos.Y, GetFrameTime(Frame.Value, AnimLength));
-				UE_LOG(LogTemp, Display, TEXT("%s Pos Y: %f"), *BoneName.ToString(), PosY);
-				return true;
-			};
-
-		Anim->GetDataModel()->IterateBoneKeys(BoneName, Iterator);
-	}
+	// Runs the given function over every frame
+	Anim->GetDataModel()->IterateBoneKeys(BoneName, Iterator);
 }
 
-void UAnimRoutine::LoadAnimSequence(const FString& FilePath)
-{
-	UAnimSequence* Anim{ LoadObject<UAnimSequence>(nullptr, *FilePath) };
-	if (Anim)
-	{
-	}
-}
-
-void UAnimRoutine::AddKey(UAnimSequence* const Anim, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
-{
-	if (Anim)
-	{
-		Anim->AddKeyToSequence(Time, BoneName, AdditiveTransform);
-	}
-}
+/* Notes:
+ * It should be possible to wrap our applications into another function or object and then slip
+ */
