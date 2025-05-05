@@ -73,12 +73,19 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
+# Content Files
+Content/StarterContent/*
+Content/LevelPrototyping/*
+
+
 # Generated Files
 .cache/*
 .vscode/*
 compile_commands.json
+*.code-worksapce
+.clang-format
+
 
 # Git
 .git/*
-
 .ignore
