@@ -1,71 +1,50 @@
-#include "AnimationRoutine.h"
-#include "AnimationTask.h"
-#include "PoseSlice.h"
 #include "Animation/AnimCurveTypes.h"
-#include "Animation/AnimSequence.h"
-#include "Animation/AnimData/IAnimationDataModel.h"
 #include "Animation/AnimData/AnimDataModel.h"
+#include "Animation/AnimData/IAnimationDataModel.h"
+#include "Animation/AnimSequence.h"
+#include "AnimationRoutine.h"
 #include "AssetViewUtils.h"
 
-
-void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, UAnimTask* Task)
+void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName)
 {
-	if (Task && Anim)
+	if (Anim)
 	{
-		SourceAnim = Anim;
-		TaskInstance = Task;
-		TArray<FName> BoneTrackNames {};
-		FTransform Transform = FTransform::Identity;
-		SourceAnim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
+		TArray<FName> BoneTrackNames{};
+		Anim->GetDataModel()->GetBoneTrackNames(BoneTrackNames);
+		double AnimLength = Anim->GetDataModel()->GetPlayLength();
 
-		FMappedAnimation MappedAnim(SourceAnim);
-		double AnimLength = SourceAnim->GetDataModel()->GetPlayLength();
-		
-		 
-		for(FName& BoneName : BoneTrackNames)
-		{
-			TaskInstance->ApplyAnimationTask(MappedAnim.GetBoneVector(BoneName));
-			SourceAnim->GetDataModel()->IterateBoneKeys(BoneName,
-				[&](const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool
-				{
-					Transform = MappedAnim.GetBoneVector(BoneName)[Frame];
-					UE::Math::TVector<double> Translation(Pos);
-					UE::Math::TQuat<double> Rotation(Rot);
-					UE::Math::TVector<double> Scale(Size);
-					Transform.GetTranslation() += Translation;
-					Transform.GetRotation() += Rotation;
-					Transform.GetScale3D() += Scale;
-					double Time = (AnimLength / Frame.Value);
-					Time = FGenericPlatformMath::IsNaN(Time) || !FGenericPlatformMath::IsFinite(Time) ? 0 : AnimLength - Time;
+		TFunction<double(double, double)> GetFrameTime = [&AnimLength](double frame, double time) {
+			time = (time / frame);
+			return FGenericPlatformMath::IsNaN(time) || !FGenericPlatformMath::IsFinite(time) ? 0 : AnimLength - time;
+		};
 
-					// I have tried a million different approaches, but I keep getting an access violation when trying to add a keyframe
-					//     ````````````````````````````````````````````````````````
-					//	   ` Hate. Let me tell you how I have come to hate you... ` 
-					//	   `|/`````````````````````````````````````````````````````
-					//	    v
-					//	 (,⚆_⚆)\       											/
-					SourceAnim->AddKeyToSequence(Time, BoneName, Transform);
-					UE_LOG(LogTemp, Display, TEXT("%s Transform:\n%s"), *BoneTrackNames[0].ToString(), *Transform.ToString());
-					return true;
-				}); 
-		}
+		TFunction<double(double, double)> Bounce = [](double value, double time) {
+			return value * sin(time);
+		};
+
+		TFunction<bool(const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame)> Iterator;
+		Iterator = [&AnimLength, &Bounce, &BoneName, &GetFrameTime](const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool {
+				double PosY = Bounce(Pos.Y, GetFrameTime(Frame.Value, AnimLength));
+				UE_LOG(LogTemp, Display, TEXT("%s Pos Y: %f"), *BoneName.ToString(), PosY);
+				return true;
+			};
+
+		Anim->GetDataModel()->IterateBoneKeys(BoneName, Iterator);
 	}
 }
 
 void UAnimRoutine::LoadAnimSequence(const FString& FilePath)
 {
-	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *FilePath)};
-	if(Anim)
+	UAnimSequence* Anim{ LoadObject<UAnimSequence>(nullptr, *FilePath) };
+	if (Anim)
 	{
-		SourceAnim = Anim;
 	}
 }
 
 void UAnimRoutine::AddKey(UAnimSequence* const Anim, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
 {
-	if(Anim)
+	if (Anim)
 	{
-		Anim -> AddKeyToSequence(Time, BoneName, AdditiveTransform);
+		Anim->AddKeyToSequence(Time, BoneName, AdditiveTransform);
 	}
-
 }
