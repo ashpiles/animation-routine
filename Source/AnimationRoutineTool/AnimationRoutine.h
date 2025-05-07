@@ -2,75 +2,46 @@
 #include "AnimationRoutine.generated.h"
 
 class UAnimSequence;
+class UAnimTask;
 
-USTRUCT(noexport, BlueprintType)
-struct FMappedAnimation
-{
-// this needs a better deconstructor
-// the nested tarray is trash I need to fix that
-private:
-	TArray<FName> BoneTrackNames;
-	TArray<double> KeyTimings;
-	TArray<TArray<FTransform>> Transforms;
-public:
-	// need a way to turn MappedAnims to animation sequences
-	//FMappedAnimation(const FString& AnimFilePath);
-	FMappedAnimation(const UAnimSequence* Anim);
-	FMappedAnimation();
+// Functional Reactive Animation
+namespace FRAN
+{ 
+	// A function of time returning any real number
+	template<typename T>
+	using TBehavior = TFunction<T(float)>; 
 
-	TArray<FTransform> GetTransforms(FName BoneTrackName);
-	void SetPoseAt(const TArray<FTransform>* const Pose);
+	// A Behavior which does not change its value over time
+	template<typename T>
+	TBehavior<T> Constant(const T& Value)
+	{
+		return [Value](float) {return Value;};
+	}
 
-    /*
-     * Reading the transform as function:
-     *	- Read the animation file at point in sequence
-     *	- read all the transforms for that bone
-     *	    - try and regression fitting
-     *	point the recorder skeletal mesh a from
-    */
-};
+	// Identity time Behavior
+//	inline TBehavior<float> Time = [](float Time) {return Time;};
 
-UCLASS(Blueprintable)
-class UAnimationRecorder : public UObject
-{
-    GENERATED_BODY()
-
-private:
-    UObject* Subject;
-    UAnimSequence RecordedAnimation;
-    FMappedAnimation MappedAnimation;
-
-public:
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    void StartRecording(UObject* Subject);
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    void StopRecording();
-
-};
+	// The Lifting function turns all parameters of a function into Behaviors
+	template<typename F, typename... B>
+	auto Lift(F Func, B... Behaviors)
+	{
+		return [=](float Time)
+		{
+			return Func(Behaviors(Time)...);
+		};
+	}
+}
 
 UCLASS(Blueprintable)
-class UAnimationRoutine : public UBlueprintFunctionLibrary
+class UAnimRoutine : public UBlueprintFunctionLibrary
 {
-    GENERATED_BODY()
-
-private:
+    GENERATED_BODY() 
 
 public:
 
     UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-    static UAnimSequence LoadAnimationSequence(const FString& FilePath);
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-	static void AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform);
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-	void LoadAndMapAnimation(const FString& AnimFilePath);
-
-    UFUNCTION(BlueprintCallable, Category="MyEditorTools")
-	void MapAnimation(const UAnimSequence* Anim);
-
+    static void MapTaskToAnim(UAnimSequence* Anim, FName BoneName, float Amp, float Freq);
 
 };
+
 

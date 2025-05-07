@@ -1,120 +1,57 @@
 #include "AnimationRoutine.h"
 #include "Animation/AnimCurveTypes.h"
-#include "Animation/AnimSequence.h"
-#include "Animation/AnimData/IAnimationDataModel.h"
 #include "Animation/AnimData/AnimDataModel.h"
+#include "Animation/AnimData/IAnimationDataModel.h"
+#include "Animation/AnimSequence.h"
 #include "AssetViewUtils.h"
 
-FMappedAnimation::FMappedAnimation()
-{}
-
-FMappedAnimation::FMappedAnimation(const UAnimSequence* Anim)
+void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName, float Amp, float Freq)
 {
-	if(Anim)
-	{
-		const IAnimationDataModel* ModelInterface = Anim->GetDataModel();
-		TArray<FName> OutNames {};
-		TArray<FTransform> OutTransforms{};
-		ModelInterface->GetBoneTrackNames(OutNames);
+	if (IsValid(Anim)) return; 
 
-		for (FName Name : OutNames)
+	// Wraps our sin function into a TBehavior
+	auto Bounce = [](float Amplitude, float Frequency) -> FRAN::TBehavior<float>
+	{
+		return [Amplitude, Frequency](float t)
 		{
-			FAnimationCurveIdentifier CurveIdentifier =
-				FAnimationCurveIdentifier(Name, ERawCurveTrackTypes::RCT_Transform);
-			ModelInterface->GetBoneTrackTransforms(Name, OutTransforms);
-			BoneTrackNames.Add(Name);
-			Transforms.Add(OutTransforms);
+			return Amplitude * FMath::Sin(t * Frequency);
+		};
+	};
+
+	// Converts a FFrameNumber to the relevant animations time code
+	auto TimeCode = [Anim](FFrameNumber Frame) -> float 
+	{
+		const float TotalLength = Anim->GetPlayLength();
+		const float	TotalFrames = Anim->GetNumberOfSampledKeys();
+		return TotalLength * (Frame.Value / TotalFrames);
+	};
+ 
+
+	TFunction<bool(const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame)> Iterator =
+		[=] (const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool
+		{
+			const float timeCode = TimeCode(Frame);
+			auto bounceBehavior = Bounce(Amp, Freq);
+			float result = bounceBehavior(timeCode);
+			FTransform transform = FTransform(UE::Math::TVector<double>(Pos.X, result, Pos.Z));
+			Anim->AddKeyToSequence(timeCode, BoneName, transform);
 			
-			UE_LOG(LogTemp, Display, TEXT("%s - %d"), *Name.ToString(), ModelInterface->GetNumberOfKeys());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot map Animation Sequence was given null pointer"));
-	}
+			UE_LOG(LogTemp, Display, TEXT("%s Y bounce at time %f: %f"), *BoneName.ToString(), timeCode, result);
+			return true;
+		};
+
+	// Runs the given function over every frame in the animation
+	Anim->GetDataModel()->IterateBoneKeys(BoneName, Iterator);
 }
 
-// needs to be redone in respect to a better format of the datastructure
-void FMappedAnimation::SetPoseAt(const TArray<FTransform>* const Pose)
-{
-	Transforms.Add(*Pose);
-}
-
-
-TArray<FTransform> FMappedAnimation::GetTransforms(FName BoneTrackName)
-{
-	int32 Index;
-	if(BoneTrackNames.Find(BoneTrackName, Index))
-	{
-		
-		UE_LOG(LogTemp, Warning, TEXT("BoneTrack found at: %d"), Index);
-		return Transforms[Index];
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("BoneTrack not found: %s"), *BoneTrackName.ToString());
-	return {};
-}
-
-void UAnimationRoutine::LoadAndMapAnimation(const FString& AnimFilePath)
-{
-	FMappedAnimation AnimMap(AnimFilePath);
-	FName Bone("foot_l");
-	TArray<FTransform> Track = AnimMap.GetTransforms(Bone);
-	int Index = 0;
-
-	for(FTransform Transform : Track)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Key: %d\n%s"), Index, *Transform.ToString());
-		Index++;
-	}
-
-}
-
-void UAnimationRoutine::MapAnimation(const UAnimSequence* Anim)
-{
-	FMappedAnimation AnimMap(Anim);
-	FName Bone("foot_l");
-	TArray<FTransform> Track = AnimMap.GetTransforms(Bone);
-	int Index = 0;
-
-	for(FTransform Transform : Track)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Key: %d\n%s"), Index, *Transform.ToString());
-		Index++;
-	}
-
-}
-
-UAnimSequence* UAnimSequence::LoadAnimationSequence(const FString& FilePath)
-{
-	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *FilePath)};
-	if(Anim)
-	{
-		return Anim;
-	}
-	return nullptr;
-}
-
-void UAnimationRoutine::AddKey(const FString& AnimFilePath, float Time, const FName& BoneName, const FTransform& AdditiveTransform)
-{
-	UAnimSequence* Anim {LoadObject<UAnimSequence>(nullptr, *AnimFilePath)};
-	if(Anim)
-	{
-		Anim -> AddKeyToSequence(Time, BoneName, AdditiveTransform);
-	}
-
-}
-
-
-void UAnimationRecorder::StartRecording(UObject* Subject)
-{}
-
-void UAnimationRecorder::StopRecording()
-{}
-
-/*
- * instead i can just make a base sequence that I add keys to
- * making an object with a skeleton recordable via a ActorComponent seems like the best path
- * that way the character can update the widget on events and the recording can be fine tuned
- * the Function is UAnimSequence::CreateAnimation(Mesh/SkeletonMesh/UAnimSequence*)
-*/
+/* Notes:
+ * If the actual adding to the animation source is wrapped in a function the
+ * application can be bounded together into a monoid that is easier to manipulate
+ * 
+ * A procedural animation can be represented as a list or vector of these functions
+ * This should neatly bow-tie to regular imperative programming so that this code stays
+ * where it is intended to be
+ * Which could possibly be done w/ a command pattern
+ *
+ * To create a 
+ */
