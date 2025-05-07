@@ -7,7 +7,7 @@
 
 void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName, float Amp, float Freq)
 {
-	if (!Anim) return; 
+	if (IsValid(Anim)) return; 
 
 	// Wraps our sin function into a TBehavior
 	auto Bounce = [](float Amplitude, float Frequency) -> FRAN::TBehavior<float>
@@ -28,22 +28,30 @@ void UAnimRoutine::MapTaskToAnim(UAnimSequence* Anim, FName BoneName, float Amp,
  
 
 	TFunction<bool(const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame)> Iterator =
-		[Anim, Bounce, TimeCode, BoneName, Amp, Freq] (const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool
+		[=] (const FVector3f& Pos, const FQuat4f& Rot, const FVector3f Size, const FFrameNumber& Frame) -> bool
 		{
-			const float t = TimeCode(Frame);
-			auto b = Bounce(Amp, Freq);
-			float result = b(t);
+			const float timeCode = TimeCode(Frame);
+			auto bounceBehavior = Bounce(Amp, Freq);
+			float result = bounceBehavior(timeCode);
 			FTransform transform = FTransform(UE::Math::TVector<double>(Pos.X, result, Pos.Z));
-			Anim->AddKeyToSequence(t, BoneName, transform);
+			Anim->AddKeyToSequence(timeCode, BoneName, transform);
 			
-			UE_LOG(LogTemp, Display, TEXT("%s Y bounce at time %f: %f"), *BoneName.ToString(), t, result);
+			UE_LOG(LogTemp, Display, TEXT("%s Y bounce at time %f: %f"), *BoneName.ToString(), timeCode, result);
 			return true;
 		};
 
-	// Runs the given function over every frame
+	// Runs the given function over every frame in the animation
 	Anim->GetDataModel()->IterateBoneKeys(BoneName, Iterator);
 }
 
 /* Notes:
- * It should be possible to wrap our applications into another function or object and then slip
+ * If the actual adding to the animation source is wrapped in a function the
+ * application can be bounded together into a monoid that is easier to manipulate
+ * 
+ * A procedural animation can be represented as a list or vector of these functions
+ * This should neatly bow-tie to regular imperative programming so that this code stays
+ * where it is intended to be
+ * Which could possibly be done w/ a command pattern
+ *
+ * To create a 
  */

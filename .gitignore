@@ -85,13 +85,10 @@ Content/LevelPrototyping/*
 compile_commands.json
 .idea/*
 Source/.idea/*
-*.code-worksapce
+*.code-workspace
 .clang-format
-.vsconfig
-
-
-# Content
-Content/StarterContent/*
+.vsconfig 
+*.sln.*
 
 # Git
 .git/*

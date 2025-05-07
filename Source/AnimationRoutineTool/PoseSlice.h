@@ -34,7 +34,9 @@ public:
     }
 };
 
-// not a real map, just some arrays interfaced by functions for now
+// the goal will be to be able to map functions to this data type
+// being able to get slices of different search queries is important for this idea
+// searching by a frame range and bones names to get a slice that can also be mapped over
 struct FMappedAnimation
 {
 private:
@@ -50,21 +52,19 @@ public:
         {
             PosesMap.Add(BoneName, FBoneVector(BoneName, Source));
         }
-    }
-
-    // a getter that takes the FFrameIndex and returns a map of the pose by frame would be good
+    } 
 
     FBoneVector& GetBoneVector(FName Bone)
     {
         return PosesMap[Bone];
     }
 
-    // the goal will be to be able to map functions to this data type
-    // being able to get slices of different search queries is important for this idea
-    // searching by a frame range and bones names to get a slice that can also be mapped over
 
 };
 
-/*
+/* Notes:
  * need to look into the FFloatCurve more, could either replace this header or better structure it
+ * Pose slices are the intermidiary between the declaritive code and the imparitive code
+ * Using the strategy pattern an animation sources data is retrieved and organized for the FMappedAnimation to
  */
+
